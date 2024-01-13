@@ -1,0 +1,103 @@
+--Create a new database name "Book_Collection" with description
+
+CREATE DATABASE "Book_Collection"
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'English_United States.1252'
+    LC_CTYPE = 'English_United States.1252'
+    LOCALE_PROVIDER = 'libc'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;
+
+COMMENT ON DATABASE "Book_Collection"
+    IS 'Database of my books collection and borrowed record';
+	
+	
+-- Create new table named "mybooks"
+
+CREATE TABLE IF NOT EXISTS public.mybooks
+(
+    isbn13 text COLLATE pg_catalog."default" NOT NULL,
+    title text COLLATE pg_catalog."default" NOT NULL,
+    author1 text COLLATE pg_catalog."default",
+    author2 text COLLATE pg_catalog."default",
+    lan text COLLATE pg_catalog."default",
+    publisher text COLLATE pg_catalog."default",
+    print integer,
+    publish_m integer,
+    publish_y integer,
+    cover text COLLATE pg_catalog."default",
+    page integer,
+    CONSTRAINT mybooks_pkey PRIMARY KEY (isbn13)
+)
+
+
+-- Add data to table mybooks
+
+INSERT INTO mybooks (isbn13, title, author1, lan, publisher, cover, page)
+	VALUES (9781442408937,'Aristotle and Dante Discover the Secrets of the Universe','Benjamin Alire Sáenz','English','Simon & Schuster','Softcover',359);
+INSERT INTO mybooks (isbn13, title, author1, lan, publisher, publish_y, cover, page)
+	VALUES (9781526648714,'The Song of Achilles','Madeline Miller','English','Bloomsburry', 2021, 'Hardcover',352);
+INSERT INTO mybooks (isbn13, title, author1, lan, publisher, print, publish_m, publish_y, cover, page)
+	VALUES (9786024817817,'Tiga Dalam Kayu','Ziggy Zesyazeoviennazabrizkie','Indonesia','Kepustakaan Populer Gramedia', 4, 3, 2023, 'Softcover',162);
+
+
+-- Show my books collection which book cover is hardcover sorted by title in ascending with limit 100 entry per page
+SELECT * FROM public.mybooks WHERE cover='Hardcover' ORDER BY title ASC LIMIT 100
+
+-- Show my books collection which is written by two authors with limit 100 entry per page
+SELECT * FROM public.mybooks WHERE author2 is not null ORDER BY title ASC LIMIT 100
+
+
+-- Update the page of book "Berani Tidak Disukai"
+SELECT * FROM mybooks WHERE title LIKE '%Tidak%';
+
+UPDATE mybooks SET page=344 where isbn13='10';
+
+SELECT * FROM mybooks WHERE isbn13='10';
+
+-- Show 5 Top Authors by most owned book
+SELECT author1, COUNT(author1) AS total FROM mybooks 
+    GROUP BY author1 ORDER BY total DESC LIMIT 5;
+
+-- Show the average pages of each Top 5 Authors
+SELECT author1, COUNT(author1) AS total, ROUND(AVG(page),2) AS avg_page FROM mybooks 
+    GROUP BY author1 ORDER BY total DESC LIMIT 5;
+
+
+-- Create new table named bought_books
+    CREATE TABLE IF NOT EXISTS public.bought_books
+    (
+        isbn13 text COLLATE pg_catalog."default" NOT NULL,
+        bought_d date,
+        price numeric,
+        bought_from text COLLATE pg_catalog."default",
+        CONSTRAINT bought_books_pkey PRIMARY KEY (isbn13)
+    )
+
+
+-- Add data to table bought_books
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786023851959', DATE '12/11/2016', 74000, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786023851911', DATE '12/11/2016', 74000, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786023851928', DATE '12/11/2016', 74000, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786023851942', DATE '12/11/2016', 74000, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786020332956', DATE '02/01/2017', 55800, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786027150546', DATE '02/01/2017', 47400, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786027742215', DATE '02/01/2017', 35400, 'Grobmart.com');
+    INSERT INTO bought_books (isbn13, bought_d, price, bought_from) VALUES ('9786021036488', DATE '02/01/2017', 43500, 'Grobmart.com');
+
+-- Show books list joined from table mybooks and bought_books contains isbn, title, first author, bought date, price, and bought from with condition the books bought from Gramedia
+    SELECT mybooks.isbn13, mybooks.title, mybooks.author1,
+    bought_books.bought_d, bought_books.price, bought_books.bought_from
+    FROM mybooks INNER JOIN bought_books ON bought_books.isbn13 = mybooks.isbn13
+    WHERE bought_books.bought_from LIKE '%Gramedia%'
+    ORDER BY mybooks.title;
+
+-- Show books bought in year 2020
+    SELECT mybooks.isbn13, mybooks.title, mybooks.author1,
+    bought_books.bought_d, bought_books.price, bought_books.bought_from
+    FROM mybooks INNER JOIN bought_books ON bought_books.isbn13 = mybooks.isbn13
+    WHERE bought_books.bought_d >= '2020-01-01' AND bought_books.bought_d < '2021-01-01'
+    ORDER BY mybooks.title;
